@@ -2,13 +2,9 @@
 
 cd dataset1 || exit 1
 
-grep -l "sample" file_* | while read filename; do
-  count=$(grep -o "CSC510" "$filename" | wc -l)
-  if [ "$count" -ge 3 ]; then
-    size=$(ls -l "$filename" | awk '{print $5}')
-    echo "$count $size $filename"
-  fi
-done | \
+# Pipeline to list, filter, sort, and rename files
+grep -l "sample" file_* | \
+xargs -I {} bash -c 'echo $(grep -o "CSC510" "{}" | wc -l) $(stat -c%s "{}") {}' | \
+awk '$1 >= 3' | \
 sort -k1,1nr -k2,2nr | \
-sed 's/file_/filtered_/g' | \
-awk '{print $3}'
+awk '{gsub("file_", "filtered_", $3); print $3}'
